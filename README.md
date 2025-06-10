@@ -92,24 +92,5 @@ If part of a paper, you may cite the underlying methods from:
 Integrated Uncertainty in Knowledge Modelling and Decision Making: 10th International Symposium, IUKM 2023, Kanazawa, Japan, November 2–4, 2023, Proceedings, Part I, Pages 27 - 36.
 https://doi.org/10.1007/978-3-031-46775-2_3
 
-bibitem: 
-
-@inproceedings{10.1007/978-3-031-46775-2_3,
-author = {Da\v{n}kov\'{a}, Martina},
-title = {Weighted Fuzzy Rules Based on Implicational Quantifiers},
-year = {2023},
-isbn = {978-3-031-46774-5},
-publisher = {Springer-Verlag},
-address = {Berlin, Heidelberg},
-url = {https://doi.org/10.1007/978-3-031-46775-2_3},
-doi = {10.1007/978-3-031-46775-2_3},
-abstract = {In this paper, we explore the use of General Unary Hypotheses Automaton (GUHA) quantifiers, explicitly implicational quantifiers, for analyzing specific relational dependencies. We discuss their suitability in fuzzy modeling and demonstrate their integration with appropriate fuzzy rules to create a new class of weighted fuzzy rules. This study contributes to the advancement of fuzzy modeling and offers a framework for further research and practical applications.},
-booktitle = {Integrated Uncertainty in Knowledge Modelling and Decision Making: 10th International Symposium, IUKM 2023, Kanazawa, Japan, November 2–4, 2023, Proceedings, Part I},
-pages = {27–36},
-numpages = {10},
-keywords = {Implicational Quantifiers, IF–THEN Rules, Fuzzy Logic, Weighted Fuzzy Rules},
-location = {Kanazawa, Japan}
-}
-
 * A preprint of the full paper containing the whole material implemented here is by
 Daňková, Martina and Hliněná, Dana, Fuzzy Rules with Quantifiers as Weights. Available at SSRN: http://dx.doi.org/10.2139/ssrn.5169367
