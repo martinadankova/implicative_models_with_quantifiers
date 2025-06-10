@@ -88,6 +88,10 @@ Martina Daňková. Implicative Models with Quantifiers: A Fuzzy Set Approach to 
 
 If part of a paper, you may cite the underlying methods from:
 
+Martina Daňková, Weighted Fuzzy Rules Based on Implicational Quantifiers.
+Integrated Uncertainty in Knowledge Modelling and Decision Making: 10th International Symposium, IUKM 2023, Kanazawa, Japan, November 2–4, 2023, Proceedings, Part I, Pages 27 - 36.
+https://doi.org/10.1007/978-3-031-46775-2_3
+
 @inproceedings{10.1007/978-3-031-46775-2_3,
 author = {Da\v{n}kov\'{a}, Martina},
 title = {Weighted Fuzzy Rules Based on Implicational Quantifiers},
