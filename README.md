@@ -42,7 +42,7 @@ License: Creative Commons Attribution 4.0 International (CC BY 4.0)
 
    * Fuzzy intervals (`Aᵢ`, `Bᵢ`) for inputs/outputs
    * Confidence measures via 2×2 contingency tables
-   * Quantified implications (e.g., $Q(A \Rightarrow B)$)
+   * Quantified implications, i.e., Q(A,B) => (A => B)
 4. **Visualizes**:
 
    * Fuzzy sets on `X`, `Y`
