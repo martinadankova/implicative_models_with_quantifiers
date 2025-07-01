@@ -33,11 +33,11 @@ Example indicators used:
 Source: The World Bank – World Development Indicators
 License: Creative Commons Attribution 4.0 International (CC BY 4.0)
 
-
-### 📈 What the Main Script `Quantifier_Based_Implicative_Models` Does
+---
+### 📈 What the Script `Quantifier_Based_Implicative_Models` Does
 
 1. **Loads functional data** (`x`, `fx`) from Excel.
-2. **Generates fuzzy partitions** on `X` and `Y` domains based on quantifiers.
+2. **Generates fuzzy partitions** on `X` and `Y` domains.
 3. **Builds fuzzy rules** using:
 
    * Fuzzy intervals (`Aᵢ`, `Bᵢ`) for inputs/outputs
@@ -48,6 +48,22 @@ License: Creative Commons Attribution 4.0 International (CC BY 4.0)
    * Fuzzy sets on `X`, `Y`
    * Rule surfaces
    * Resulting quantified implicative model as fuzzy relation over (X, Y)
+
+### 📈 What the Script `WorldBankExample` Does
+
+1. **Loads the data** (`GDP per capita (current US$)`, `Fertility rate, total (births per woman)`) from csv.
+2. **Generates fuzzy partitions** on `X` and `Y` domains.
+3. **Builds fuzzy rules** using:
+
+   * Fuzzy intervals (`Aᵢ`, `Bᵢ`) for inputs/outputs
+   * Confidence measures via 2×2 contingency tables
+   * Quantified implications (e.g., $Q(A \Rightarrow B)$)
+4. **Visualizes**:
+
+   * Fuzzy sets on `X`, `Y`
+   * Rule surfaces
+   * Resulting quantified implicative model as fuzzy relation over (X, Y)
+   * Various defuzzification methods with visualisations together over the original data as well as the quantified implicative model
 
 ---
 
