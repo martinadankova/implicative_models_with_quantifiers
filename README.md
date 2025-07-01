@@ -15,7 +15,11 @@ This repository demonstrates a construction of fuzzy implicative models based on
   * `funcnihodnoty.xlsx` – sythetic input data (two columns: `x` and `fx`)
   * `world_bank_indicators.csv` – real data gathered by World Bank 
 * `Quantifier_Based_Implicative_Models.ipynb` the main script – Construction and visualization of the implicative fuzzy model
-* `Quantifiers_Examples.ipynb` - shows examples of implicative quantifier values 
+* `Quantifiers_Examples.ipynb` - shows examples of implicative quantifier values
+* `WorldBankExample.ipynb` - provides example of building implicative model with quantifiers for world bank data set together with defuzzification methods and standard simple models
+* `WorldBankExample10Rules.ipynb` - the same as above only the number of rules is set to 10
+* `ParametersSavingUploading_QuantifiersBasedModels.ipynb` - provides a way how to store the model's parameters and load them for a future manipulations
+  
 ---
 ### 🌍 Data Source
 This project uses synthetic data and may be extended to real-world data such as the World Bank Development Indicators.
