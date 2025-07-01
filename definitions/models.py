@@ -8,7 +8,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
+
+# Define defuzzification methods
+def defuzzify(y, mu, method):
+    if np.sum(mu) == 0:
+        return np.nan
+    if method == "COG":
+        return np.sum(y * mu) / np.sum(mu)
+    elif method == "MOM":
+        max_mu = np.max(mu)
+        return np.mean(y[np.isclose(mu, max_mu)])
+    elif method == "MaxOM":
+        max_mu = np.max(mu)
+        return np.max(y[np.isclose(mu, max_mu)])
+    elif method == "MinOM":
+        max_mu = np.max(mu)
+        return np.min(y[np.isclose(mu, max_mu)])
+    else:
+        raise ValueError("Invalid defuzzification method")
+        
 def defuzzify_cog(x, mu):
     return np.sum(x * mu) / np.sum(mu)
 
@@ -79,6 +99,66 @@ def load_and_plot_QModel(pickle_path):
     plt.title("Loaded Quantified Fuzzy Model")
     plt.tight_layout()
     plt.show()
+
+def QRules_precision(model, test_datax, test_datay,defuzz="MOM"):
+    """
+    Evaluate the precision of a fuzzy implicative model using the model matrix itself (no interpolation).
+
+    For each test point (x, y), find the nearest indices in the model grid and report the corresponding membership value.
+
+    Parameters:
+    - model: 2D numpy array (ModelQuantifiedRules) of shape [len(y_vals), len(x_vals)]
+    - test_datax: 1D array-like, input values of test data
+    - test_datay: 1D array-like, target/output values of test data
+
+    Returns:
+    - mean_membership: average membership degree
+    - memberships: list of membership degrees for each test point
+    """
+    nodesx = model["nodesx"]
+    nodesyL = model["nodesyL"]
+    nodesyR = model["nodesyR"]
+    quantifier = model["quantifier"]
+    decl = model["decl"]
+    maxx = model["maxx"]
+    minx = model["minx"]
+    maxfx = model["maxfx"]
+    minfx = model["minfx"]
+    y = model["y"]
+
+    predicted = []
+    for x_test in test_datax:
+        # Build fuzzy model for this x_test
+        ModelQuantifiedRules = None
+        for i in range(len(nodesx) - 1):
+            Ai = fr.fintervalM(np.array([x_test]), nodesx[i], nodesx[i + 1], decl / maxx)[0]
+            Bi = fr.fintervalM(y, nodesyL[i], nodesyR[i], decl / maxfx)
+            Rule = Ai * Bi  # Implicative rule by Cartesian product
+            WeightedRule = fr.implL(quantifier[i], Rule)
+
+            if ModelQuantifiedRules is None:
+                ModelQuantifiedRules = WeightedRule
+            else:
+                ModelQuantifiedRules = np.minimum(ModelQuantifiedRules, WeightedRule)
+
+        y_pred = defuzzify(np.array(y), np.array(ModelQuantifiedRules), defuzz)
+        predicted.append(y_pred)
+
+    predicted = np.array(predicted)
+    test_datay = np.array(test_datay)
+
+    # Filter NaNs if any (e.g. outside of model domain)
+    mask = ~np.isnan(predicted) & ~np.isnan(test_datay)
+    predicted_clean = predicted[mask]
+    test_clean = test_datay[mask]
+
+    metrics = {
+        "MAE": float(mean_absolute_error(test_clean, predicted_clean)),
+        "RMSE": float(np.sqrt(mean_squared_error(test_clean, predicted_clean))),
+        "R2": float(r2_score(test_clean, predicted_clean))
+    }
+
+    return predicted.tolist(), metrics
 
 def QRules_model(datax: np.ndarray, datavalx: np.ndarray, dx: int, decl: int):
     maxx = np.max(datax)
