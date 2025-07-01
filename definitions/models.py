@@ -5,7 +5,150 @@ import plotly.graph_objects as go
 from . import quantifiers as qt
 import matplotlib.pyplot as plt
 
-def QRules(datax:np.ndarray, datavalx: np.ndarray,dx:np.integer,dy:np.integer,decl:np.integer):
+import numpy as np
+import matplotlib.pyplot as plt
+import pickle
+
+def defuzzify_cog(x, mu):
+    return np.sum(x * mu) / np.sum(mu)
+
+def defuzzify_mom(x, mu):
+    x = np.asarray(x)
+    max_mu = np.max(mu)
+    return np.mean(x[np.isclose(mu, max_mu)])
+
+def defuzzify_maxom(x, mu):
+    x = np.asarray(x)
+    max_mu = np.max(mu)
+    return np.max(x[np.isclose(mu, max_mu)])
+
+def defuzzify_minom(x, mu):
+    x = np.asarray(x)
+    max_mu = np.max(mu)
+    return np.min(x[np.isclose(mu, max_mu)])
+
+def plot_and_save_QModel(model_output, filename_base="QModel"):
+    # Rozbal parametry
+    x = model_output["x"]
+    y = model_output["y"]
+    ModelQuantifiedRules = model_output["ModelQuantifiedRules"]
+    nodesx = model_output["nodesx"]
+    nodesyL = model_output["nodesyL"]
+    nodesyR = model_output["nodesyR"]
+    quantifier = model_output["quantifier"]
+    
+    # === 1. Vykreslení fuzzy modelu ===
+    plt.figure(figsize=(8, 6))
+    extent = [min(x), max(x), min(y), max(y)]
+    plt.imshow(ModelQuantifiedRules, extent=extent, origin='lower', cmap='viridis', aspect='auto')
+    plt.colorbar(label='Membership Degree')
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.title("Quantified Fuzzy Model")
+    plt.tight_layout()
+    
+    # Uložení grafu
+    plot_path = f"{filename_base}_plot.png"
+    plt.savefig(plot_path)
+    plt.close()
+
+    # === 2. Uložení modelu jako pickle ===
+    pickle_path = f"{filename_base}_model.pkl"
+    with open(pickle_path, "wb") as f:
+        pickle.dump(model_output, f)
+
+    return {"plot_file": plot_path, "pickle_file": pickle_path}
+
+def load_and_plot_QModel(pickle_path):
+    # Načti model ze souboru
+    with open(pickle_path, "rb") as f:
+        model_output = pickle.load(f)
+
+    # Rozbal parametry
+    x = model_output["x"]
+    y = model_output["y"]
+    ModelQuantifiedRules = model_output["ModelQuantifiedRules"]
+
+    # Vykreslení
+    plt.figure(figsize=(8, 6))
+    extent = [min(x), max(x), min(y), max(y)]
+    plt.imshow(ModelQuantifiedRules, extent=extent, origin='lower', cmap='viridis', aspect='auto')
+    plt.colorbar(label='Membership Degree')
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.title("Loaded Quantified Fuzzy Model")
+    plt.tight_layout()
+    plt.show()
+
+def QRules_model(datax: np.ndarray, datavalx: np.ndarray, dx: int, decl: int):
+    maxx = np.max(datax)
+    maxfx = np.max(datavalx)
+    minx = np.min(datax)
+    minfx = np.min(datavalx)
+
+    nodesx = [minx + k * ((maxx - minx) / dx) for k in range(dx)]
+    nodesx.append(maxx + 1)
+
+    disx = 100
+    x = [minx + k * ((maxx - minx) / disx) for k in range(disx)]
+
+    disy = 100
+    y = [minfx + k * ((maxfx - minfx) / disy) for k in range(disy)]
+
+    # create fuzzy intervals and quantifiers
+    nodesyL = []
+    nodesyR = []
+    quantifier = []
+
+    for i in range(len(nodesx) - 1):
+        start_interval = nodesx[i]
+        end_interval = nodesx[i + 1]
+        weight = fr.fintervalM(datax, start_interval, end_interval, decl / maxx)
+        sum_weight = np.sum(weight)
+
+        weighted_mean = np.sum(weight * datavalx) / sum_weight
+        weighted_variance = np.sum(weight * np.abs(datavalx - weighted_mean)) / sum_weight
+
+        left = weighted_mean - weighted_variance
+        right = weighted_mean + weighted_variance
+        nodesyL.append(left)
+        nodesyR.append(right)
+
+        Ai = fr.fintervalM(datax, start_interval, end_interval, decl / maxx)
+        Bi = fr.fintervalM(datavalx, left, right, decl / maxfx)
+        table_AiBi = qt.fourftable(Ai, Bi)
+        q1 = qt.QConfidence(table_AiBi[0], table_AiBi[1])
+        quantifier.append(q1)
+
+    # construct the final quantified model
+    A1x = fr.fintervalM(x, nodesx[0], nodesx[1], decl / maxx)
+    B1y = fr.fintervalM(y, nodesyL[0], nodesyR[0], decl / maxfx)
+    ModelRules = fr.CartImplL(A1x, B1y)
+    ModelQuantifiedRules = fr.implL(quantifier[0], ModelRules)
+
+    for i in range(1, len(nodesyL)):
+        Aix = fr.fintervalM(x, nodesx[i], nodesx[i+1], decl / maxx)
+        Biy = fr.fintervalM(y, nodesyL[i], nodesyR[i], decl / maxfx)
+        ModelRules = fr.CartImplL(Aix, Biy)
+        ModelQuantifiedRules = np.minimum(ModelQuantifiedRules, fr.implL(quantifier[i], ModelRules))
+
+    return {
+        "ModelQuantifiedRules": ModelQuantifiedRules,
+        "nodesx": nodesx,
+        "nodesyL": nodesyL,
+        "nodesyR": nodesyR,
+        "x": x,
+        "y": y,
+        "quantifier": quantifier,
+        "maxx": maxx,
+        "minx": minx,
+        "maxfx": maxfx,
+        "minfx": minfx,
+        "decl": decl,
+        "dx": dx
+    }
+
+def QRules(datax:np.ndarray, datavalx: np.ndarray,dx:np.integer,decl:np.integer):
     maxx=max(datax)
     maxfx=max(datavalx)
     minx=min(datax)
@@ -82,6 +225,7 @@ def QRules(datax:np.ndarray, datavalx: np.ndarray,dx:np.integer,dy:np.integer,de
     return ModelQuantifiedRules
 
 def MamdATLxATMy(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:np.integer):
+    # Atleast Atmost mamdani model
     maxx=max(data_x)
     maxfx=max(data_fx)
     length_x=len(data_x)
@@ -105,6 +249,7 @@ def MamdATLxATMy(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:np
     return datamodelMamd
 
 def RulesIntervals(nodes_x: np.ndarray, nodes_fx: np.ndarray,disx:np.integer,disy:np.integer):
+    # Implicative modes that use atl and atm intervals over nodes fx
     maxx=max(nodes_x)
     maxfx=max(nodes_fx)
     length_x=len(nodes_x)
@@ -128,6 +273,7 @@ def RulesIntervals(nodes_x: np.ndarray, nodes_fx: np.ndarray,disx:np.integer,dis
     return datamodelRules
 
 def RulesATLxATLy(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:np.integer):
+    # Atleast model
     maxx=max(data_x)
     maxfx=max(data_fx)
     length_x=len(data_x)
@@ -151,6 +297,7 @@ def RulesATLxATLy(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:n
     return datamodelRules
 
 def MamdSim(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:np.integer):
+    # Mamdani for each data
     maxx=max(data_x)
     maxfx=max(data_fx)
     length_x=len(data_x)
@@ -174,6 +321,7 @@ def MamdSim(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:np.inte
     return datamodelMamd
 
 def RulesSim(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:np.integer):
+    # Rules for each data
     maxx=max(data_x)
     maxfx=max(data_fx)
     length_x=len(data_x)
@@ -263,4 +411,5 @@ def ShowModelwithData(set_x, set_y, dataset, scatter_x,scatter_fx,scatter_z, nam
     )
 
     fig.show()
+    return fig
 
