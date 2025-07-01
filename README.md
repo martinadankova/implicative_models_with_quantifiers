@@ -2,7 +2,7 @@
 
 ### 🔍 Overview
 
-This repository demonstrates the construction of fuzzy implicative models based on functional data, using **fuzzy sets**, **fuzzy quantifiers**, and **linguistic implications**. The goal is to model relationships between input-output pairs using an interpretable fuzzy rule base enhanced by quantifier-driven confidence.
+This repository demonstrates a construction of fuzzy implicative models based on functional data, using **fuzzy sets**, **fuzzy quantifiers**, and **linguistic implications**. The goal is to model relationships between input-output pairs using an interpretable fuzzy rule base enhanced by quantifier-driven confidence.
 
 ### 📂 Structure
 
@@ -11,10 +11,24 @@ This repository demonstrates the construction of fuzzy implicative models based 
   * `FuzzyRelations.py`: fuzzy sets, fuzzy implications, interval functions
   * `quantifiers.py`: linguistic quantifiers and truth evaluation
   * `models.py`: visualization, rule generation, Mamdani and implicative simulation
-* `data/funcnihodnoty.xlsx` – Input data (two columns: `x` and `fx`)
+* `data/
+  * `funcnihodnoty.xlsx` – sythetic input data (two columns: `x` and `fx`)
+  * `world_bank_indicators.csv` – real data gathered by World Bank 
 * `Quantifier_Based_Implicative_Models.ipynb` the main script – Construction and visualization of the implicative fuzzy model
 * `Quantifiers_Examples.ipynb` - shows examples of implicative quantifier values 
 ---
+### 🌍 Data Source
+This project uses synthetic data and may be extended to real-world data such as the World Bank Development Indicators.
+
+Example indicators used:
+
+* GDP per capita (current US$) – NY.GDP.PCAP.CD
+
+* Fertility rate, total (births per woman) – SP.DYN.TFRT.IN
+
+Source: The World Bank – World Development Indicators
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+
 
 ### 📈 What the Main Script `Quantifier_Based_Implicative_Models` Does
 
