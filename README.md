@@ -8,9 +8,9 @@ This repository demonstrates a construction of fuzzy implicative models based on
 
 * `definitions/` – Core implementation modules:
 
-  * `FuzzyRelations.py`: fuzzy sets, fuzzy implications, interval functions
-  * `quantifiers.py`: linguistic quantifiers and truth evaluation
-  * `models.py`: visualization, rule generation, Mamdani and implicative simulation
+  * `FuzzyRelations.py`: fuzzy sets, fuzzy operations, fuzzy intervals, binary fuzzy relations such as Cartesean product, similarity relations, at least and at most relations
+  * `quantifiers.py`: implicative quantifiers
+  * `models.py`: visualization, rule generation, Mamdani and implicative models, defuzzifications
 * `data/
   * `funcnihodnoty.xlsx` – sythetic input data (two columns: `x` and `fx`)
   * `world_bank_indicators.csv` – real data gathered by World Bank 
