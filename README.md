@@ -24,11 +24,11 @@ This repository demonstrates a construction of fuzzy implicative models based on
 ### 🌍 Data Source
 This project uses synthetic data and may be extended to real-world data such as the World Bank Development Indicators.
 
-Example indicators used:
+Example indicators used in the current code:
 
-* GDP per capita (current US$) – NY.GDP.PCAP.CD
+* GDP per capita (current US$) 
 
-* Fertility rate, total (births per woman) – SP.DYN.TFRT.IN
+* Fertility rate, total (births per woman) 
 
 Source: The World Bank – World Development Indicators
 License: Creative Commons Attribution 4.0 International (CC BY 4.0)
