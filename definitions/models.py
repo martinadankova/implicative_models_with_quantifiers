@@ -100,20 +100,9 @@ def load_and_plot_QModel(pickle_path):
     plt.tight_layout()
     plt.show()
 
-def QRules_precision(model, test_datax, test_datay,defuzz="MOM"):
+def QRules_precision(model, xtest,ytest,ymin=None, ymax=None ,defuzz="MOM"):
     """
     Evaluate the precision of a fuzzy implicative model using the model matrix itself (no interpolation).
-
-    For each test point (x, y), find the nearest indices in the model grid and report the corresponding membership value.
-
-    Parameters:
-    - model: 2D numpy array (ModelQuantifiedRules) of shape [len(y_vals), len(x_vals)]
-    - test_datax: 1D array-like, input values of test data
-    - test_datay: 1D array-like, target/output values of test data
-
-    Returns:
-    - mean_membership: average membership degree
-    - memberships: list of membership degrees for each test point
     """
     nodesx = model["nodesx"]
     nodesyL = model["nodesyL"]
@@ -121,31 +110,32 @@ def QRules_precision(model, test_datax, test_datay,defuzz="MOM"):
     quantifier = model["quantifier"]
     decl = model["decl"]
     maxx = model["maxx"]
-    minx = model["minx"]
-    maxfx = model["maxfx"]
-    minfx = model["minfx"]
-    y = model["y"]
+    import numpy as np
+
+    y = np.linspace(ymin, ymax, 100)
+
 
     predicted = []
-    for x_test in test_datax:
+   
+    for x_test in xtest:
         # Build fuzzy model for this x_test
         ModelQuantifiedRules = None
         for i in range(len(nodesx) - 1):
-            Ai = fr.fintervalM(np.array([x_test]), nodesx[i], nodesx[i + 1], decl / maxx)[0]
-            Bi = fr.fintervalM(y, nodesyL[i], nodesyR[i], decl / maxfx)
-            Rule = Ai * Bi  # Implicative rule by Cartesian product
+            Ai = fr.fintervalM(x_test, nodesx[i], nodesx[i + 1], decl / maxx)[0]
+            Bi = fr.fintervalM(y, nodesyL[i], nodesyR[i], decl / ymax)
+            Rule = fr.scalarimplL(Ai, Bi)
             WeightedRule = fr.implL(quantifier[i], Rule)
 
             if ModelQuantifiedRules is None:
                 ModelQuantifiedRules = WeightedRule
             else:
                 ModelQuantifiedRules = np.minimum(ModelQuantifiedRules, WeightedRule)
-
+        
         y_pred = defuzzify(np.array(y), np.array(ModelQuantifiedRules), defuzz)
         predicted.append(y_pred)
 
     predicted = np.array(predicted)
-    test_datay = np.array(test_datay)
+    test_datay = np.array(ytest)
 
     # Filter NaNs if any (e.g. outside of model domain)
     mask = ~np.isnan(predicted) & ~np.isnan(test_datay)

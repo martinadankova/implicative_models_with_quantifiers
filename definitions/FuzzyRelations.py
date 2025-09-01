@@ -24,6 +24,15 @@ def implL(x: np.ndarray, y: np.ndarray):
         outf=1-x+y
         outf=np.minimum(1,outf)
         return outf
+def scalarimplL(x, y):
+    """
+    Łukasiewicz implication: I_L(x, y) = min(1, 1 - x + y)
+    Works with scalar x and array y (or any broadcastable shapes).
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    # robust to inputs slightly outside [0,1]
+    return np.clip(1.0 - x + y, 0.0, 1.0)
 
 def conjL(x: np.ndarray, y: np.ndarray):
         outf=x+y-1
