@@ -100,55 +100,52 @@ def load_and_plot_QModel(pickle_path):
     plt.tight_layout()
     plt.show()
 
-def QRules_precision(model, xtest,ytest,ymin=None, ymax=None ,defuzz="MOM"):
-    """
-    Evaluate the precision of a fuzzy implicative model using the model matrix itself (no interpolation).
-    """
-    nodesx = model["nodesx"]
-    nodesyL = model["nodesyL"]
-    nodesyR = model["nodesyR"]
-    quantifier = model["quantifier"]
-    decl = model["decl"]
-    maxx = model["maxx"]
-    import numpy as np
+def QRules_simple(datax: np.ndarray, datavalx: np.ndarray, dx: int, decl: int):
+    maxx = np.max(datax)
+    maxfx = np.max(datavalx)
+    minx = np.min(datax)
+    minfx = np.min(datavalx)
 
-    y = np.linspace(ymin, ymax, 100)
+    nodesx = [minx + k * ((maxx - minx) / dx) for k in range(dx)]
+    nodesx.append(maxx + 1)
 
+    # create fuzzy intervals and quantifiers
+    nodesyL = []
+    nodesyR = []
+    quantifier = []
 
-    predicted = []
-   
-    for x_test in xtest:
-        # Build fuzzy model for this x_test
-        ModelQuantifiedRules = None
-        for i in range(len(nodesx) - 1):
-            Ai = fr.fintervalM(x_test, nodesx[i], nodesx[i + 1], decl / maxx)[0]
-            Bi = fr.fintervalM(y, nodesyL[i], nodesyR[i], decl / ymax)
-            Rule = fr.scalarimplL(Ai, Bi)
-            WeightedRule = fr.implL(quantifier[i], Rule)
+    for i in range(len(nodesx) - 1):
+        start_interval = nodesx[i]
+        end_interval = nodesx[i + 1]
+        weight = fr.fintervalM(datax, start_interval, end_interval, decl / maxx)
+        sum_weight = np.sum(weight)
 
-            if ModelQuantifiedRules is None:
-                ModelQuantifiedRules = WeightedRule
-            else:
-                ModelQuantifiedRules = np.minimum(ModelQuantifiedRules, WeightedRule)
-        
-        y_pred = defuzzify(np.array(y), np.array(ModelQuantifiedRules), defuzz)
-        predicted.append(y_pred)
+        weighted_mean = np.sum(weight * datavalx) / sum_weight
+        weighted_variance = np.sum(weight * np.abs(datavalx - weighted_mean)) / sum_weight
 
-    predicted = np.array(predicted)
-    test_datay = np.array(ytest)
+        left = weighted_mean - weighted_variance
+        right = weighted_mean + weighted_variance
+        nodesyL.append(left)
+        nodesyR.append(right)
 
-    # Filter NaNs if any (e.g. outside of model domain)
-    mask = ~np.isnan(predicted) & ~np.isnan(test_datay)
-    predicted_clean = predicted[mask]
-    test_clean = test_datay[mask]
+        Ai = fr.fintervalM(datax, start_interval, end_interval, decl / maxx)
+        Bi = fr.fintervalM(datavalx, left, right, decl / maxfx)
+        table_AiBi = qt.fourftable(Ai, Bi)
+        q1 = qt.QConfidence(table_AiBi[0], table_AiBi[1])
+        quantifier.append(q1)
 
-    metrics = {
-        "MAE": float(mean_absolute_error(test_clean, predicted_clean)),
-        "RMSE": float(np.sqrt(mean_squared_error(test_clean, predicted_clean))),
-        "R2": float(r2_score(test_clean, predicted_clean))
+    return {
+        "nodesx": nodesx,
+        "nodesyL": nodesyL,
+        "nodesyR": nodesyR,
+        "quantifier": quantifier,
+        "maxx": maxx,
+        "minx": minx,
+        "maxfx": maxfx,
+        "minfx": minfx,
+        "decl": decl,
+        "dx": dx
     }
-
-    return predicted.tolist(), metrics
 
 def QRules_model(datax: np.ndarray, datavalx: np.ndarray, dx: int, decl: int):
     maxx = np.max(datax)
@@ -217,6 +214,61 @@ def QRules_model(datax: np.ndarray, datavalx: np.ndarray, dx: int, decl: int):
         "decl": decl,
         "dx": dx
     }
+
+def QRules_defuzz_eval(model, xtest:np.ndarray,ytest:np.ndarray,ymin=None, ymax=None ,defuzz="MOM"):
+    """
+    Evaluate the precision of a fuzzy implicative model using the model matrix itself (no interpolation).
+    """
+    nodesx = model["nodesx"]
+    nodesyL = model["nodesyL"]
+    nodesyR = model["nodesyR"]
+    quantifier = model["quantifier"]
+    decl = model["decl"]
+    maxx = model["maxx"]
+    maxfx = model["maxfx"]
+    import numpy as np
+
+    x=xtest
+#    y = np.linspace(ymin, ymax, 100)
+    y = np.linspace(ymin, ymax, len(xtest))
+
+    predicted = []
+
+    A1x=fr.fintervalM(x,nodesx[0],nodesx[1],decl/maxx)
+    B1y=fr.fintervalM(y,nodesyL[0],nodesyR[0],decl/maxfx)
+    ModelRules=fr.CartImplL(A1x,B1y)
+    ModelQuantifiedRules=fr.implL(quantifier[0],ModelRules)
+    #p=ShowModelwithData(x,y,ModelQuantifiedRules,datax,datavalx,datax*0
+    #                         ,'Quantifier Based Implicative Rule 1')
+    #plt.show
+    for i in range(1,len(nodesyL)):
+    #    print(i)
+        Aix=fr.fintervalM(x,nodesx[i],nodesx[i+1],decl/maxx)
+        Biy=fr.fintervalM(y,nodesyL[i],nodesyR[i],decl/maxfx)
+        ModelRules=fr.CartImplL(Aix,Biy)
+        ModelQuantifiedRules=np.minimum(ModelQuantifiedRules,fr.implL(quantifier[i],ModelRules))
+    #    plt.show
+    
+    for i in range(0, len(ModelQuantifiedRules)):
+    # Defuzzifikace každého řádku jako model fuzzy množiny
+        y_pred = defuzzify(np.array(y), np.array(ModelQuantifiedRules[:,i]), defuzz)
+        predicted.append(y_pred)
+
+    predicted = np.array(predicted)
+    test_datay = np.array(ytest)
+
+    # Filter NaNs if any (e.g. outside of model domain)
+    mask = ~np.isnan(predicted) & ~np.isnan(test_datay)
+    predicted_clean = predicted[mask]
+    test_clean = test_datay[mask]
+
+    metrics = {
+        "MAE": float(mean_absolute_error(test_clean, predicted_clean)),
+        "RMSE": float(np.sqrt(mean_squared_error(test_clean, predicted_clean))),
+        "R2": float(r2_score(test_clean, predicted_clean))
+    }
+
+    return predicted.tolist(), metrics
 
 def QRules(datax:np.ndarray, datavalx: np.ndarray,dx:np.integer,decl:np.integer):
     maxx=max(datax)
