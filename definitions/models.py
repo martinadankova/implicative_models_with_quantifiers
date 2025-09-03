@@ -261,7 +261,8 @@ def QRules_defuzz_eval(model, xtest:np.ndarray,ytest:np.ndarray,ymin=None, ymax=
     mask = ~np.isnan(predicted) & ~np.isnan(test_datay)
     predicted_clean = predicted[mask]
     test_clean = test_datay[mask]
-
+    print(len(predicted))
+    print(len(predicted_clean))
     metrics = {
         "MAE": float(mean_absolute_error(test_clean, predicted_clean)),
         "RMSE": float(np.sqrt(mean_squared_error(test_clean, predicted_clean))),
