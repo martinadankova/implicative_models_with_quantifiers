@@ -347,6 +347,109 @@ def QRules(datax:np.ndarray, datavalx: np.ndarray,dx:np.integer,decl:np.integer)
 
     return ModelQuantifiedRules
 
+def QRules_values(model):
+    nodesx = model["nodesx"]
+    nodesyL = model["nodesyL"]
+    nodesyR = model["nodesyR"]
+    quantifier = model["quantifier"]
+    decl = model["decl"]
+    maxx = model["maxx"]
+    maxfx = model["maxfx"]
+    minx=model["minx"]
+    minfx=model["minfx"]
+    # set discretization of X and Y for final plots
+    disx=100
+    x=[minx+k*((maxx-minx)/disx) for k in range(0,disx)]
+    disy=100
+    y=[minfx+k*((maxfx-minfx)/disy) for k in range(0,disy)]
+
+    # create fuzzy intervals on X for discretization of X
+    # plot fuzzy sets on X
+    fig1 = plt.figure()
+    for i in range(0, len(nodesx)-1):
+        Aix=fr.fintervalM(x,nodesx[i],nodesx[i+1],decl/maxx)
+        plt.plot(x,Aix)
+
+    plt.show()
+
+    for i in range(len(nodesyL)):
+        Biy=fr.fintervalM(y,nodesyL[i],nodesyR[i],decl/maxfx)
+        plt.plot(y,Biy)
+    plt.show()
+
+    A1x=fr.fintervalM(x,nodesx[0],nodesx[1],decl/maxx)
+    B1y=fr.fintervalM(y,nodesyL[0],nodesyR[0],decl/maxfx)
+    ModelRules=fr.CartImplL(A1x,B1y)
+    ModelQuantifiedRules=fr.implL(quantifier[0],ModelRules)
+    for i in range(1,len(nodesyL)):
+        Aix=fr.fintervalM(x,nodesx[i],nodesx[i+1],decl/maxx)
+        Biy=fr.fintervalM(y,nodesyL[i],nodesyR[i],decl/maxfx)
+        ModelRules=fr.CartImplL(Aix,Biy)
+        ModelQuantifiedRules=np.minimum(ModelQuantifiedRules,fr.implL(quantifier[i],ModelRules))
+        plt.show
+    return ModelQuantifiedRules
+
+def QRules_defuzz_plot(model,values,data_train,data_test):
+    nodesx = model["nodesx"]
+    nodesyL = model["nodesyL"]
+    nodesyR = model["nodesyR"]
+    decl = model["decl"]
+    maxx = model["maxx"]
+    maxfx = model["maxfx"]
+    minx=model["minx"]
+    minfx=model["minfx"]
+    # set discretization of X and Y for final plots
+    disx=100
+    x=[minx+k*((maxx-minx)/disx) for k in range(0,disx)]
+    disy=100
+    y=[minfx+k*((maxfx-minfx)/disy) for k in range(0,disy)]
+
+    # create fuzzy intervals on X for discretization of X
+    # plot fuzzy sets on X
+    fig1 = plt.figure()
+    for i in range(0, len(nodesx)-1):
+        Aix=fr.fintervalM(x,nodesx[i],nodesx[i+1],decl/maxx)
+        plt.plot(x,Aix)
+
+    plt.show()
+
+    for i in range(len(nodesyL)):
+        Biy=fr.fintervalM(y,nodesyL[i],nodesyR[i],decl/maxfx)
+        plt.plot(y,Biy)
+    plt.show()
+# Defuzzifikace každého řádku jako model fuzzy množiny
+    cogs = []
+    moms = []
+    maxoms = []
+    minoms = []
+    for i in range(0, len(values)):
+        mu = values[:,i]
+        cogs.append(defuzzify_cog(y, mu))
+        moms.append(defuzzify_mom(y, mu))
+        maxoms.append(defuzzify_maxom(y, mu))
+        minoms.append(defuzzify_minom(y, mu))
+    xy=[minx,maxx,minfx,maxfx]# Výpis a graf
+    plt.scatter(data_train['GDP per capita (current US$)'], data_train['Fertility rate, total (births per woman)'], label='Training Data', color='lightblue')
+    plt.scatter(data_test['GDP per capita (current US$)'], data_test['Fertility rate, total (births per woman)'], label='Test Data', color='grey')
+    # Překreslení křivek
+    plt.plot(x, cogs, label='COG', color='black', linewidth=2)
+    plt.plot(x, moms, label='MOM', color='darkred', linewidth=2)
+    plt.plot(x, maxoms, label='MaxOM', color='blue', linewidth=2)
+    plt.plot(x, minoms, label='MinOM', color='green', linewidth=2)
+    plt.xlim(xy[0], xy[1])
+    plt.ylim(xy[2], xy[3])
+    plt.xlabel('GDP per capita (current US$)')
+    plt.xlabel('GDP per capita (current US$)')
+    plt.ylabel('Defuzzified Value')
+    plt.gca().set_aspect("auto") 
+    plt.legend()
+    plt.show()
+
+    return {"cogs":cogs,
+            "moms" :moms,
+            "maxoms" :maxoms,
+            "minoms":minoms}
+
 def MamdATLxATMy(data_x: np.ndarray, data_fx: np.ndarray,disx:np.integer,disy:np.integer):
     # Atleast Atmost mamdani model
     maxx=max(data_x)
